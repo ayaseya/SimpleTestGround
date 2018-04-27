@@ -9,11 +9,15 @@ public class Player : MonoBehaviour
 	Animator m_Animator;
 	Rigidbody m_Rigidbody;
 	Vector3 m_Movement;
+	Renderer m_Renderer;
+
+	int hp = 100;				// ライフ
 
 	void Awake ()
 	{
 		m_Animator = GetComponent<Animator> ();
 		m_Rigidbody = GetComponent<Rigidbody> ();
+		m_Renderer = GetComponentInChildren<Renderer> ();
 	}
 
 	void FixedUpdate ()
@@ -40,7 +44,7 @@ public class Player : MonoBehaviour
 	private void Turn ()
 	{
 		// 移動中でなければ回転処理は行わない
-		if (!isRunning ())
+		if (!IsRunning ())
 			// NOP.
 			return;
 
@@ -54,12 +58,41 @@ public class Player : MonoBehaviour
 	private void Animate ()
 	{
 		// 走るアニメーションの有効、無効化
-		m_Animator.SetBool ("Running", isRunning ());
+		m_Animator.SetBool ("Running", IsRunning ());
 	}
 
-	private bool isRunning ()
+	private bool IsRunning ()
 	{
 		// ベクトルの長さでキャラクターが移動中か判断する
 		return m_Movement.magnitude != 0f;
+	}
+
+	public void TakeDamage (int damage)
+	{
+		// ライフ減算
+		hp -= damage;
+
+		// プレイヤーの進行方向とは逆に弾く処理
+		// 仮の値なので反発係数はマジックナンバーとして許容する
+		m_Rigidbody.AddForce (transform.forward * -60f, ForceMode.Impulse);
+
+		// 点滅によるダメージ演出
+		StartCoroutine (Blink ());
+	}
+
+	private IEnumerator Blink ()
+	{
+		//変更前のマテリアルのコピーを保存
+		var original = new Material (m_Renderer.material);
+
+		//キーワードの有効化する
+		m_Renderer.material.EnableKeyword ("_EMISSION");
+
+		//白色に光らせる
+		m_Renderer.material.SetColor ("_EmissionColor", new Color (1, 1, 1));
+
+		// 0.1秒待機して元の色に戻す
+		yield return new WaitForSeconds (0.1f);
+		m_Renderer.material = original;
 	}
 }
