@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -10,6 +9,7 @@ public class Player : MonoBehaviour
 	Rigidbody m_Rigidbody;
 	Vector3 m_Movement;
 	Renderer m_Renderer;
+    LifeGaugeController m_Life;
 
 	int hp = 100;				// ライフ
 
@@ -18,6 +18,7 @@ public class Player : MonoBehaviour
 		m_Animator = GetComponent<Animator> ();
 		m_Rigidbody = GetComponent<Rigidbody> ();
 		m_Renderer = GetComponentInChildren<Renderer> ();
+        m_Life = GetComponentInChildren<LifeGaugeController>();
 	}
 
 	void FixedUpdate ()
@@ -64,13 +65,16 @@ public class Player : MonoBehaviour
 	private bool IsRunning ()
 	{
 		// ベクトルの長さでキャラクターが移動中か判断する
-		return m_Movement.magnitude != 0f;
+		return System.Math.Abs(m_Movement.magnitude) > 0;
 	}
 
 	public void TakeDamage (int damage)
 	{
 		// ライフ減算
 		hp -= damage;
+
+        // ライフゲージに反映
+        m_Life.OnGaugeUpdate(hp);
 
 		// プレイヤーの進行方向とは逆に弾く処理
 		// 仮の値なので反発係数はマジックナンバーとして許容する
